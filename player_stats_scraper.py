@@ -1,7 +1,25 @@
 # This script looks at the teams page and extracts data for each player
-
+import re
 import requests
 from bs4 import BeautifulSoup
+
+def extract_id_from_link(id_desc, link):
+    pattern = fr'{id_desc}=(\d+)(?:&|$)'
+    match = re.search(pattern, link)
+    if match:
+        value = match.group(1)
+        return value
+    else:
+        return None
+
+def extract_player_id_from_link(link):
+    return extract_id_from_link('playerID', link)
+
+def extract_team_id_from_link(link):
+    return extract_id_from_link('teamID', link)
+
+def extract_league_id_from_link(link):
+    return extract_id_from_link('leagueID', link)
 
 URL = 'https://www.hna.com/leagues/teamsV1.cfm?leagueID=6202&clientID=2296'
 
@@ -32,6 +50,9 @@ for link in all_team_stats_links:
     for tr in table.find_all('tr')[1:]:
         columns = tr.find_all('td')
         player_stats = {
+            'player_id': extract_player_id_from_link(columns[1].a.get('href')),
+            'team_id': extract_team_id_from_link(link),
+            'league_id': extract_league_id_from_link(link),
             'roster_num': columns[0].text.strip(),
             'player_name': columns[1].a.text,
             'player_num': columns[2].text.strip(),
@@ -45,7 +66,3 @@ for link in all_team_stats_links:
         all_player_stats.append(player_stats)
 
 print(all_player_stats)
-
-#TODO Add function to extract playerID from link on player name
-
-#TODO Add function to extract team name / teamID from team stats page
